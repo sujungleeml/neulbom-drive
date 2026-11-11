@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "screen": "idle",
+  "revision": 9,
+  "updatedAt": "2026-11-05T07:51:53Z",
+  "note": "Visual Layout Studio가 저장하는 대기(IDLE) 화면 배치 값. 단위 dp/sp. 앱 기본값으로 빌드에 들어간다.",
+  "day": {
+    "safeTop": 0,
+    "safeBottom": 24,
+    "safeStart": 32,
+    "safeEnd": 0,
+    "brand": {
+      "visible": true,
+      "widthFraction": 0.4,
+      "cornerRadius": 20,
+      "imageFit": "crop",
+      "imageAlignX": 0.5,
+      "imageAlignY": 0,
+      "imageScale": 1,
+      "missionVisible": true,
+      "missionFontSize": 36,
+      "missionPaddingX": 40,
+      "missionPaddingBottom": 40,
+      "missionBackdrop": true
+    },
+    "main": {
+      "paddingStart": 64,
+      "paddingEnd": 64,
+      "paddingTop": 32,
+      "gap": 20,
+      "titleFontSize": 52,
+      "actionsPlacement": "bottom",
+      "actionsBottomOffset": 30,
+      "ctaHeight": 112,
+      "ctaGap": 16,
+      "primaryWeight": 2,
+      "secondaryWeight": 1
+    }
+  },
+  "night": {
+    "safeTop": 0,
+    "safeBottom": 24,
+    "safeStart": 32,
+    "safeEnd": 0,
+    "brand": {
+      "visible": true,
+      "widthFraction": 0.4,
+      "cornerRadius": 20,
+      "imageFit": "crop",
+      "imageAlignX": 0.5,
+      "imageAlignY": 0,
+      "imageScale": 1,
+      "missionVisible": true,
+      "missionFontSize": 36,
+      "missionPaddingX": 40,
+      "missionPaddingBottom": 40,
+      "missionBackdrop": true
+    },
+    "main": {
+      "paddingStart": 64,
+      "paddingEnd": 64,
+      "paddingTop": 32,
+      "gap": 20,
+      "titleFontSize": 52,
+      "actionsPlacement": "bottom",
+      "actionsBottomOffset": 30,
+      "ctaHeight": 112,
+      "ctaGap": 16,
+      "primaryWeight": 2,
+      "secondaryWeight": 1
+    }
+  }
+}

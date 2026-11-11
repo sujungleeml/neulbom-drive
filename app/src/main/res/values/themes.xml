@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 주간 창 배경 = 디자인 토큰 bg(#F7F5F0). 앱이 그려지기 전 깜빡임을 막는다. -->
+    <style name="Theme.NeulbomDrive" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/neulbom_bg</item>
+        <item name="android:statusBarColor">@color/neulbom_bg</item>
+        <item name="android:navigationBarColor">@color/neulbom_bg</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+    </style>
+</resources>

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "screen": "interrupted",
+  "revision": 1,
+  "updatedAt": "2026-11-05T00:00:00Z",
+  "note": "Visual Layout Studio가 저장하는 화면 배치 값. 단위 dp/sp.",
+  "day": {
+    "padStart": 32,
+    "padEnd": 32,
+    "padTop": 32,
+    "padBottom": 32,
+    "gap": 24,
+    "maxWidth": 1040,
+    "verticalBias": 0,
+    "titleFontSize": 52,
+    "ctaHeight": 72,
+    "ctaGap": 16,
+    "ctaMinWidth": 280,
+    "actionsBottomOffset": 0,
+    "imageSize": 240
+  },
+  "night": {
+    "padStart": 32,
+    "padEnd": 32,
+    "padTop": 32,
+    "padBottom": 32,
+    "gap": 24,
+    "maxWidth": 1040,
+    "verticalBias": 0,
+    "titleFontSize": 52,
+    "ctaHeight": 72,
+    "ctaGap": 16,
+    "ctaMinWidth": 280,
+    "actionsBottomOffset": 0,
+    "imageSize": 240
+  }
+}

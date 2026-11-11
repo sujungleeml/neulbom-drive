@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 야간 창 배경 = 야간 토큰 bg(#0F1B2C). -->
+    <style name="Theme.NeulbomDrive" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/neulbom_bg</item>
+        <item name="android:statusBarColor">@color/neulbom_bg</item>
+        <item name="android:navigationBarColor">@color/neulbom_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+</resources>

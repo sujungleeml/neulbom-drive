@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 시각 주의 과제 화살표(자극 세트 arrows-lr v2). 오른쪽은 이 모양을 좌우 반전해 그린다. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="256dp"
+    android:height="256dp"
+    android:viewportWidth="256"
+    android:viewportHeight="256">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M111.7 53.1C117.6 47.3 127.1 47.3 133 53.1C138.8 59 138.8 68.5 133 74.3L94.7 112.5H210C218.3 112.5 225 119.2 225 127.5C225 135.8 218.3 142.5 210 142.5H94.7L133 180.7C138.8 186.5 138.8 196 133 201.9C127.1 207.7 117.6 207.7 111.7 201.9L48 138.1C42.1 132.3 42.1 122.7 48 116.9L111.7 53.1Z" />
+</vector>

@@ -14,11 +14,12 @@ import com.neulbom.drive.vehicle.api.VehicleState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.time.Duration
 
 /**
  * Pleos 차량 플랫폼 어댑터 — **공식 SDK 문서 검증 전 자리표시자**.
  *
- * 확인되지 않은 Pleos API는 임의로 호출하지 않는다(PRD 6절).
+ * 확인되지 않은 Pleos API는 임의로 호출하지 않는다(PRD 6절, 마스터 지시문 2).
  * 그때까지 이 어댑터는 안전 기본값을 반환한다:
  *  - 모든 상태 UNKNOWN → ParkingSafetyGate가 인지 과제 진입을 항상 거부
  *  - capabilityFlags() 비어 있음 → 앱이 차량 연동 기능을 "사용 불가"로 표시
@@ -44,7 +45,13 @@ class PleosVehicleAdapter(clock: Clock) : VehicleAdapter, DriverIdentityAdapter 
 
     override fun capabilityFlags(): Set<CapabilityFlag> = emptySet()
 
-    // TODO(PLEOS-7): 신호별 SDK 이름·문서·권한·샘플링을 확인하면 신호 지원표와 함께 갱신.
+    /**
+     * 실차 신호는 1.5초 넘게 갱신되지 않으면 믿지 않는다(Fail-closed).
+     * TODO(PLEOS-2): 실제 구현은 SDK 콜백을 받을 때마다 observedAt을 지금 시각으로 갱신해야 한다.
+     */
+    override val maxSignalAge: Duration = Duration.ofMillis(1500)
+
+    // TODO(PLEOS-7): 신호별 SDK 이름·문서·권한·샘플링을 확인하면 docs/neulbom-drive/v0.6/signal-support.md와 함께 갱신.
     override fun signalSupport(): List<SignalSupport> = SignalId.entries.map { SignalSupport(it, SupportStatus.UNVERIFIED) }
 
     override fun currentDriver(): DriverIdentity = DriverIdentity.Unverified // TODO(PLEOS-4)

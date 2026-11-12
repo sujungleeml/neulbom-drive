@@ -17,6 +17,8 @@ data class MetricLine(
     val templateId: String,
     /** 보조 값(예: 주행한 날 줄의 주행 횟수). */
     val extra: Double? = null,
+    /** 지난달 값. 비교할 수 있을 때(방향이 있을 때)만 채운다. */
+    val previous: Double? = null,
 )
 
 data class DrivingReport(
@@ -52,6 +54,7 @@ object DrivingReportBuilder {
             value = value,
             unit = unit,
             direction = dir(value, prev),
+            previous = if (dir(value, prev) != null) prev else null,
             templateId = if (value == null) current.unavailable[key] ?: "COLLECTING" else DrivingCopy.METRIC_TEMPLATE.getValue(key),
             extra = extra,
         )

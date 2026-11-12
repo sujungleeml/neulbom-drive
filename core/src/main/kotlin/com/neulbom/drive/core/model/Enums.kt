@@ -17,5 +17,5 @@ enum class TaskType {
 enum class SafetyState { DRIVING, PARKED_SAFE, PARKED_UNVERIFIED, POWERING_OFF }
 
 
-/** 합성 데이터와 실측 데이터를 명확히 구분한다. */
+/** 합성 데이터와 실측 데이터를 명확히 구분한다(마스터 지시문 6). */
 enum class DataOrigin { REAL, MOCK }

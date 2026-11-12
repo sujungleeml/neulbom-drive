@@ -1,5 +1,6 @@
 package com.neulbom.drive.domain.driving
 
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
@@ -33,6 +34,31 @@ object DrivingCopy {
         Direction.LESS to "지난달보다 줄었어요.",
         Direction.SIMILAR to "지난달과 비슷해요.",
     )
+
+    /** 지난달과 비교해 변화량을 말하는 지표(웹 「지난달과 달라진 점」). */
+    val CHANGE_KEYS = listOf("distance", "harsh_decel_per_100km", "night_share")
+
+    /**
+     * 지난달 값과 이번 달 값, 변화량을 실제 계산값 그대로 말한다. 비교할 수 없으면 null.
+     * 좋고 나쁨이나 원인은 말하지 않는다.
+     */
+    fun change(line: MetricLine): String? {
+        if (line.key !in CHANGE_KEYS) return null
+        val cur = line.value ?: return null
+        val prev = line.previous ?: return null
+        val dir = line.direction ?: return null
+        fun tail(diff: String) = when (dir) {
+            Direction.MORE -> "$diff 늘었어요."
+            Direction.LESS -> "$diff 줄었어요."
+            Direction.SIMILAR -> "비슷해요."
+        }
+        return when (line.key) {
+            "distance" -> "주행 거리: 지난달 ${"%.1f".format(prev)} km, 이번 달 ${"%.1f".format(cur)} km로 ${tail("${"%.1f".format(abs(cur - prev))} km")}"
+            "harsh_decel_per_100km" -> "100 km당 급감속 기록: 지난달 ${"%.1f".format(prev)}번, 이번 달 ${"%.1f".format(cur)}번으로 ${tail("${"%.1f".format(abs(cur - prev))}번")}"
+            "night_share" -> "야간 주행 비율: 지난달 ${(prev * 100).roundToInt()}%, 이번 달 ${(cur * 100).roundToInt()}%로 ${tail("${abs((cur * 100).roundToInt() - (prev * 100).roundToInt())}%p")}"
+            else -> null
+        }
+    }
 
     val ALL_TEMPLATE_IDS: List<String> = METRIC_TEMPLATE.values.toList() + NOTICES.keys
 

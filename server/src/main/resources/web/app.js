@@ -42,9 +42,95 @@
       $('state').textContent = NB.DRIVING_STATE[r.state] || '';
       $('mock').hidden = r.origin !== 'MOCK';
       NB.drivingCards(r, $('cards'));
+      renderChanges(r);
+      loadSuggestions();
       NB.listItems($('notices'), r.notices);
       renderQuality(r.quality);
     } catch (e) { $('state').textContent = OFFLINE; }
+  }
+
+  // 늘어난 변화에만 일반 운전 습관 정보(habits.json)의 한 절을 함께 보여 준다. 점검 기록으로는 연결하지 않는다.
+  const CHANGE_TIP = { harsh_decel_per_100km: '길 위에서', night_share: '나에게 맞는 시간과 길', distance: '쉬어 가기' };
+  let habitsCache = null;
+  // 이번 달의 기록과 작은 제안: 시연 서버에서는 합성 시나리오, 그 밖에는 실제 경로의 상태 문장만 보여 준다.
+  let suggestScenario = new URLSearchParams(location.search).get('scenario') || 'R01';
+  async function loadSuggestions() {
+    const box = $('suggest');
+    let s = null, demo = true;
+    try {
+      const res = await fetch('/v1/demo/suggestions?scenario=' + encodeURIComponent(suggestScenario));
+      if (res.ok) s = await res.json();
+      else { demo = false; s = await getJson('/v1/reports/me/suggestions'); }
+    } catch (e) { box.hidden = true; return; }
+    box.hidden = false;
+    $('suggest-badge').hidden = !s.synthetic;
+    const chips = $('suggest-scenarios');
+    chips.replaceChildren();
+    if (demo) s.scenarios.forEach(function (sc) {
+      const b = NB.el('button', 'chip' + (sc.id === s.scenario ? ' on' : ''), sc.id);
+      b.type = 'button';
+      b.title = sc.label;
+      b.setAttribute('aria-label', sc.id + ' ' + sc.label);
+      b.setAttribute('aria-pressed', String(sc.id === s.scenario));
+      b.addEventListener('click', function () { suggestScenario = sc.id; loadSuggestions(); });
+      chips.append(b);
+    });
+    chips.hidden = !demo;
+    const main = $('suggest-main');
+    main.replaceChildren();
+    $('suggest-state').textContent = s.primary ? '' : s.notice;
+    if (!s.primary) return;
+    // 3·4. 두 기록을 함께 살펴보는 한 문장과 실천할 수 있는 짧은 제안
+    const lead = NB.el('div', 'suggest-lead');
+    lead.append(NB.el('p', 'together', s.primary.together), NB.el('p', 'action', s.primary.action));
+    main.append(lead);
+    // 1·2. 각 기록에서 관찰된 변화(근거 수치와 비교 기간)
+    const cols = NB.el('div', 'suggest-cols');
+    [['주의와 반응 활동에서 달라진 점', s.activityEvidence, s.activityBasis], ['주행 기록에서 달라진 점', s.drivingEvidence, s.drivingBasis]].forEach(function (c) {
+      const col = NB.el('section', 'suggest-col');
+      col.append(NB.el('h3', null, c[0]));
+      const ul = NB.el('ul', null);
+      c[1].forEach(function (t) { ul.append(NB.el('li', null, t)); });
+      col.append(ul, NB.el('p', 'basis', c[2] || ''));
+      cols.append(col);
+    });
+    main.append(cols);
+    if (s.others.length) {
+      const more = NB.el('details', 'suggest-more');
+      more.append(NB.el('summary', null, '다른 제안 ' + s.others.length + '개 더 보기'));
+      s.others.forEach(function (o) { more.append(NB.el('p', 'other', o.together + ' ' + o.action)); });
+      main.append(more);
+    }
+    main.append(NB.el('p', 'suggest-note', s.notice + ' 운전 실력이나 건강을 판단한 것이 아니에요. 필요한 것만 골라 참고해 주세요.'));
+  }
+
+  async function renderChanges(r) {
+    const list = $('change-list');
+    list.replaceChildren();
+    const changes = r.lines.filter(function (l) { return l.changeText; });
+    if (r.state !== 'TREND_AVAILABLE' || !changes.length) {
+      $('change-state').textContent = '아직 기록을 모으는 중이에요. 두 달 모두 8일, 100 km 이상 기록이 모이면 지난달과 비교해 보여 드려요.';
+      return;
+    }
+    const today = new Date();
+    const isNow = r.period === today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0');
+    $('change-state').textContent = isNow ? '이번 달은 오늘(' + today.getDate() + '일)까지의 기록이에요. 거리처럼 쌓이는 값은 달이 끝날 때까지 더 늘 수 있어요.' : '';
+    try { if (!habitsCache) habitsCache = await getJson('habits.json'); } catch (e) { habitsCache = { sections: [] }; }
+    changes.forEach(function (l) {
+      const li = NB.el('li', null);
+      li.append(NB.el('p', null, l.changeText));
+      const sec = l.direction === 'MORE' ? habitsCache.sections.find(function (s) { return s.title === CHANGE_TIP[l.key]; }) : null;
+      if (sec) {
+        const tip = NB.el('div', 'tip');
+        const head = NB.el('p', null);
+        head.append(document.createTextNode('함께 보면 좋은 운전 습관 정보: '), NB.el('strong', null, sec.title));
+        const ul = NB.el('ul', null);
+        sec.items.forEach(function (t) { ul.append(NB.el('li', null, t)); });
+        tip.append(head, ul);
+        li.append(tip);
+      }
+      list.append(li);
+    });
   }
 
   function renderQuality(q) {

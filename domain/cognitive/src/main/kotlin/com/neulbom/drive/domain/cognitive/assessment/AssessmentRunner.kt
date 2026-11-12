@@ -19,7 +19,11 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
@@ -65,6 +69,8 @@ class AssessmentRunner(
         userInitiated = userInitiated,
         appInForeground = appForeground.value,
         cognitiveConsent = consents.state.value.isGranted(ConsentType.COGNITIVE_CHECK),
+        now = clock.now(),
+        maxSignalAge = vehicle.maxSignalAge,
     )
 
     fun start(userInitiated: Boolean, isFirstAssessment: Boolean): StartResult {
@@ -119,7 +125,7 @@ class AssessmentRunner(
     /** 과제 사이 안내 화면에서 "다음"을 눌렀을 때. 다시 안전 조건을 확인한다. */
     fun beginNextTask() {
         val between = stateFlow.value as? RunnerState.Between ?: return
-        val stop = gate.stopReason(vehicle.observeState().value, vehicle.capabilityFlags(), appForeground.value)
+        val stop = gate.stopReason(vehicle.observeState().value, vehicle.capabilityFlags(), appForeground.value, clock.now(), vehicle.maxSignalAge)
         if (stop != null) {
             finish(AssessmentStatus.INTERRUPTED, stop)
             return
@@ -140,8 +146,25 @@ class AssessmentRunner(
     private fun watch() {
         watchJob?.cancel()
         watchJob = scope.launch {
-            combine(vehicle.observeState(), appForeground) { v, fg -> gate.stopReason(v, vehicle.capabilityFlags(), fg) }
-                .collect { reason -> if (reason != null && isActive()) finish(AssessmentStatus.INTERRUPTED, reason) }
+            combine(vehicle.observeState(), appForeground, ticks()) { v, fg, _ ->
+                gate.stopReason(v, vehicle.capabilityFlags(), fg, clock.now(), vehicle.maxSignalAge)
+            }.collect { reason -> if (reason != null && isActive()) finish(AssessmentStatus.INTERRUPTED, reason) }
+        }
+    }
+
+    /**
+     * 새 상태가 오지 않아도 신호 나이를 다시 보도록 주기적으로 깨운다. 신호 나이를 보지 않는 어댑터면 한 번만 내보낸다.
+     * 주기: 허용 나이의 1/3, 최대 500ms.
+     */
+    private fun ticks(): Flow<Long> {
+        val maxAge = vehicle.maxSignalAge ?: return flowOf(0L)
+        val period = minOf(maxAge.toMillis() / 3, TICK_MAX_MS).coerceAtLeast(1L)
+        return flow {
+            var n = 0L
+            while (true) {
+                emit(n++)
+                delay(period)
+            }
         }
     }
 
@@ -158,5 +181,9 @@ class AssessmentRunner(
             val saved = runCatching { sink.close(done) }.getOrDefault(SaveState.SAVE_FAILED)
             stateFlow.value = RunnerState.Finished(done, saved)
         }
+    }
+
+    private companion object {
+        const val TICK_MAX_MS = 500L
     }
 }

@@ -15,6 +15,6 @@ class CarCopyTest {
 
 class OfferCopyTest {
     @Test fun offerTitleIsExact() {
-        assertEquals("약 3분 점검을 해 보실래요?", UiText.OFFER_TITLE)
+        assertEquals("약 4분 점검을 해 보실래요?", UiText.OFFER_TITLE)
     }
 }

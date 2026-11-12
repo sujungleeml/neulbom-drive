@@ -60,7 +60,17 @@ data class SessionUploadDto(val session: SessionDto, val samplesEncoded: String)
 data class UploadResultDto(val driveId: String, val quality: String, val valid: Boolean, val algorithmVersion: String)
 
 @Serializable
-data class MetricLineDto(val key: String, val value: Double?, val unit: String, val direction: String?, val extra: Double?, val text: String)
+data class MetricLineDto(
+    val key: String,
+    val value: Double?,
+    val unit: String,
+    val direction: String?,
+    val extra: Double?,
+    val text: String,
+    /** 지난달 값과 변화 문장(비교할 수 있을 때만). */
+    val previous: Double? = null,
+    val changeText: String? = null,
+)
 
 @Serializable
 data class DrivingReportDto(

@@ -53,7 +53,7 @@ fun OnboardingScreen(container: AppContainer, onDone: () -> Unit) {
         when (step) {
             0 -> {
                 Heading(UiText.MISSION)
-                Body("늘봄 Drive는 내 운전 습관과, 주차 중 약 3분 동안 하는 주의·반응 점검 기록을 내가 살펴보도록 돕는 서비스예요.")
+                Body("늘봄 Drive는 내 운전 습관과, 주차 중 약 4분 동안 하는 주의·반응 점검 기록을 내가 살펴보도록 돕는 서비스예요.")
                 SectionCard {
                     Body("• 운전 중에는 알림·점검을 하지 않아요")
                     Body("• 동의한 기록만 보관하고, 위치·경로·목적지는 받지 않아요")

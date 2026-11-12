@@ -1,7 +1,20 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     kotlin("android")
     id("org.jetbrains.kotlin.plugin.compose")
+}
+
+// 릴리즈 서명: 저장소 밖 속성 파일(storeFile, keyAlias)과 환경 변수(비밀번호)가 모두 있을 때만 쓴다.
+// 없으면 디버그 키로 서명한다(CI, 다른 PC에서도 빌드되도록). 키와 비밀번호는 저장소에 두지 않는다.
+val releaseSigningProps: Properties? = run {
+    val path = System.getenv("NEULBOM_RELEASE_SIGNING")
+        ?: "${System.getProperty("user.home")}/.neulbom-keys/release-signing.properties"
+    val f = file(path)
+    val storePw = System.getenv("NEULBOM_KEYSTORE_PASSWORD")
+    if (!f.isFile || storePw.isNullOrEmpty()) null
+    else Properties().apply { f.inputStream().use { load(it) } }
 }
 
 android {
@@ -12,8 +25,9 @@ android {
         applicationId = "com.neulbom.drive"
         minSdk = 29
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0-mvp"
+        versionCode = 2
+        // 공모전 시연용 빌드(정식 출시본 아님).
+        versionName = "1.0.0-contest"
     }
 
     // 차량 연동 방식별 빌드 플래버. mock: SDK 없이 실행 가능한 데모, pleos: 공식 SDK 검증 후 연동.
@@ -35,6 +49,17 @@ android {
         }
     }
 
+    signingConfigs {
+        releaseSigningProps?.let { p ->
+            create("release") {
+                storeFile = file(p.getProperty("storeFile"))
+                keyAlias = p.getProperty("keyAlias")
+                storePassword = System.getenv("NEULBOM_KEYSTORE_PASSWORD")
+                keyPassword = System.getenv("NEULBOM_KEY_PASSWORD") ?: System.getenv("NEULBOM_KEYSTORE_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         debug {
             // Visual Layout Studio(개발 PC, 포트 8095) Hot Reload. mock 플래버에서만 켠다(LayoutStore).
@@ -43,8 +68,8 @@ android {
         release {
             buildConfigField("String", "LAYOUT_STUDIO_URL", "\"\"")
             isMinifyEnabled = false
-            // 데모 배포용: 디버그 키로 서명(공모전 제출 시 정식 키로 교체).
-            signingConfig = signingConfigs.getByName("debug")
+            // 릴리즈 키가 준비된 PC에서만 릴리즈 키, 아니면 디버그 키(위 releaseSigningProps 참고).
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
     buildFeatures {

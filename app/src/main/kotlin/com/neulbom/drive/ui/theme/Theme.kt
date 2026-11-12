@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.sp
 
 /**
  * 디자인 토큰 한 벌(Quiet Luxury × Warm Mobility × Brain Wellness).
- * 값은 웹(server/src/main/resources/web/app.css)의 디자인 토큰과 같다.
+ * 값은 docs/design/home-dashboard-mockup.html 의 :root 변수와 같다.
  */
 data class NeulbomPalette(
     val background: Color,

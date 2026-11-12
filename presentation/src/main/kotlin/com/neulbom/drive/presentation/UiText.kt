@@ -54,7 +54,7 @@ object UiText {
     const val IDLE_DRIVING_OFF = "주행 습관 기록이 꺼져 있어요."
     const val IDLE_DRIVING_TURN_ON = "켜러 가기"
     const val IDLE_DRIVING_CLOSE = "닫기"
-    /** 제안 정책 고지(IDLE에서 OFFER로 옮김). */
+    /** 제안 정책 고지(GPT 11/05: IDLE에서 OFFER로 옮김). */
     const val OFFER_INTERVAL_NOTE = "늘봄 점검은 정해진 간격으로만 제안해요."
 
     // 음성 안내(선택)
@@ -62,7 +62,7 @@ object UiText {
     const val VOICE_DESCRIPTION = "주차 중에만 화면 문장을 읽어 드려요."
 
     // CAR-03 제안
-    const val OFFER_TITLE = "약 3분 점검을 해 보실래요?"
+    const val OFFER_TITLE = "약 4분 점검을 해 보실래요?"
     const val OFFER_BODY = "짧은 활동 3가지를 해요. 원하면 중간에 멈출 수 있어요."
     const val OFFER_FIRST_NOTE = "처음이라 연습부터 천천히 시작해요."
     const val OFFER_START = "지금 시작"
@@ -72,7 +72,7 @@ object UiText {
     // CAR-04 안내
     const val GUIDE_TITLE = "시작하기 전에"
     val GUIDE_POINTS = listOf(
-        "약 3분 정도 걸려요.",
+        "약 4분 정도 걸려요.",
         "화면을 보고 큰 버튼을 누르면 돼요.",
         "차가 움직이거나 시동을 끄면 바로 멈춰요.",
     )

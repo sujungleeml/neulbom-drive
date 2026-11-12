@@ -78,4 +78,28 @@ class ParkingSafetyGateTest {
         adapter.setScenario(MockScenario.STOPPED_AT_LIGHT)
         assertFalse(gate.canShowParkedPrompt(adapter.observeState().value, adapter.capabilityFlags(), true))
     }
+
+    /** 신호가 허용 나이보다 오래 갱신되지 않으면 주차 확인 상태라도 상태 불명으로 막는다(Fail-closed). */
+    @Test
+    fun staleSignalIsTreatedAsUnknown() {
+        adapter.setScenario(MockScenario.PARKED_VERIFIED)
+        val state = adapter.observeState().value
+        val caps = adapter.capabilityFlags()
+        val maxAge = java.time.Duration.ofMillis(1500)
+        val fresh = state.observedAt.plusMillis(1000)
+        val stale = state.observedAt.plusMillis(2000)
+        assertEquals(GateDecision.Allowed, gate.evaluateStart(state, caps, true, true, true, fresh, maxAge))
+        assertEquals(GateDecision.Denied(DenialReason.STATE_UNKNOWN), gate.evaluateStart(state, caps, true, true, true, stale, maxAge))
+        assertEquals(DenialReason.STATE_UNKNOWN, gate.stopReason(state, caps, true, stale, maxAge))
+        assertFalse(gate.canShowParkedPrompt(state, caps, true, stale, maxAge))
+        // 나이 기준이 없으면(모의 시뮬레이터) 보지 않는다
+        assertEquals(GateDecision.Allowed, gate.evaluateStart(state, caps, true, true, true, stale, null))
+        assertEquals(GateDecision.Allowed, gate.evaluateStart(state, caps, true, true, true, null, maxAge))
+    }
+
+    @Test
+    fun pleosAdapterDeclaresSignalAge() {
+        assertEquals(java.time.Duration.ofMillis(1500), PleosVehicleAdapter(FakeClock()).maxSignalAge)
+        assertNull(adapter.maxSignalAge)
+    }
 }

@@ -48,7 +48,7 @@ fun main() {
     }
     // 보존 기간 정리: 시작할 때 한 번, 그 뒤 하루에 한 번.
     Timer("retention", true).scheduleAtFixedRate(timerTask { purgeExpired(store, checks, SystemClock.now()) }, 0L, Duration.ofDays(1).toMillis())
-    embeddedServer(Netty, port = port, host = "0.0.0.0") { neulbomModule(store, SystemClock, checks, settings, shares) }.start(wait = true)
+    embeddedServer(Netty, port = port, host = "0.0.0.0") { neulbomModule(store, SystemClock, checks, settings, shares, suggestionsDemo = System.getenv("NEULBOM_DEMO_SEED") == "true") }.start(wait = true)
 }
 
 fun seedDemo(store: DrivingStore, today: LocalDate, seed: Long = 20261101L) {

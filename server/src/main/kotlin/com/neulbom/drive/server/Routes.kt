@@ -16,6 +16,7 @@ import com.neulbom.drive.server.share.ShareStore
 import com.neulbom.drive.server.share.shareRoutes
 import com.neulbom.drive.server.journey.journeyRoutes
 import com.neulbom.drive.server.overview.overviewRoutes
+import com.neulbom.drive.server.suggest.suggestionRoutes
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.Application
@@ -40,6 +41,8 @@ fun Application.neulbomModule(
     checks: CheckStore = InMemoryCheckStore(),
     settings: SettingsStore = InMemorySettingsStore(),
     shares: ShareStore = InMemoryShareStore(),
+    /** 시연 서버에서만 켠다: 합성 기록으로 「이번 달의 기록과 작은 제안」을 보여 준다. */
+    suggestionsDemo: Boolean = false,
 ) {
     install(ContentNegotiation) { json() }
     install(StatusPages) {
@@ -55,6 +58,7 @@ fun Application.neulbomModule(
         shareRoutes(shares, store, checks, clock)
         journeyRoutes(store, checks, clock)
         overviewRoutes(store, checks, clock)
+        suggestionRoutes(settings, suggestionsDemo)
         staticResources("/", "web")
     }
 }

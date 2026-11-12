@@ -15,8 +15,11 @@ import com.neulbom.drive.domain.consent.ConsentType
 import com.neulbom.drive.domain.consent.InMemoryConsentRepository
 import com.neulbom.drive.vehicle.mock.MockScenario
 import com.neulbom.drive.vehicle.mock.MockVehicleAdapter
+import com.neulbom.drive.vehicle.api.VehicleAdapter
+import java.time.Duration
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -42,8 +45,13 @@ class AssessmentRunnerTest {
     private val sink = InMemoryTrialLogSink()
     private val foreground = MutableStateFlow(true)
 
-    private fun TestScope.runner() = AssessmentRunner(
-        gate = ParkingSafetyGate(), vehicle = vehicle, consents = consents, sink = sink,
+    /** 신호 나이를 보는 실차 어댑터 흉내: 상태는 모의 어댑터 그대로, 허용 나이만 1.5초. */
+    private val agingVehicle = object : VehicleAdapter by vehicle {
+        override val maxSignalAge: Duration = Duration.ofMillis(1500)
+    }
+
+    private fun TestScope.runner(adapter: VehicleAdapter = vehicle) = AssessmentRunner(
+        gate = ParkingSafetyGate(), vehicle = adapter, consents = consents, sink = sink,
         protocols = ProvisionalProtocols.ALL, appForeground = foreground, clock = clock, ids = SeededUuidGenerator(3),
         scope = backgroundScope, appVersion = "0.2.0", deviceProfile = "test", randomSeed = { 42L },
     )
@@ -197,5 +205,43 @@ class AssessmentRunnerTest {
         runner.cancelByUser()
         runCurrent()
         assertEquals(SaveState.SAVE_FAILED, assertIs<RunnerState.Finished>(runner.state.value).saveState)
+    }
+
+    /** 점검 중 신호가 1.5초 넘게 갱신되지 않으면, 새 상태가 오지 않아도 중단한다(신호 끊김, Fail-closed). */
+    @Test fun staleSignalMidCheckInterrupts() = runTest {
+        consents.update(ConsentType.COGNITIVE_CHECK, true)
+        val runner = runner(agingVehicle)
+        assertIs<StartResult.Started>(runner.start(userInitiated = true, isFirstAssessment = false))
+        runCurrent()
+        assertIs<RunnerState.Running>(runner.state.value)
+        clock.advanceMs(2000)
+        advanceTimeBy(600)
+        runCurrent()
+        val finished = assertIs<RunnerState.Finished>(runner.state.value)
+        assertEquals(AssessmentStatus.INTERRUPTED, finished.session.status)
+        assertEquals(DenialReason.STATE_UNKNOWN, finished.session.stopReason)
+    }
+
+    /** 신호가 계속 갱신되면 시간이 흘러도 멈추지 않는다. */
+    @Test fun refreshedSignalKeepsCheckRunning() = runTest {
+        consents.update(ConsentType.COGNITIVE_CHECK, true)
+        val runner = runner(agingVehicle)
+        runner.start(userInitiated = true, isFirstAssessment = false)
+        runCurrent()
+        repeat(10) {
+            clock.advanceMs(1000)
+            vehicle.setScenario(MockScenario.PARKED_VERIFIED) // 새 신호(observedAt 갱신)
+            advanceTimeBy(1000)
+            runCurrent()
+        }
+        assertIs<RunnerState.Running>(runner.state.value)
+    }
+
+    /** 이미 오래된 신호로는 시작하지 않는다. */
+    @Test fun staleSignalBlocksStart() = runTest {
+        consents.update(ConsentType.COGNITIVE_CHECK, true)
+        val runner = runner(agingVehicle)
+        clock.advanceMs(2000)
+        assertEquals(StartResult.Denied(DenialReason.STATE_UNKNOWN), runner.start(userInitiated = true, isFirstAssessment = false))
     }
 }

@@ -1,5 +1,6 @@
 // 패턴 지도 3D(시연): 합성 운전자 한 명 = 점 하나. 점검(과제 3개 반응 시간)과 주행(주행일·거리·야간 비율)은 따로 그린다.
-// 경계면·초평면·군집 색·평가하는 색은 그리지 않는다. 점은 단색이고, 고른 연령대만 진하게 보여 줄 수 있다.
+// 경계면·초평면·평가하는 색은 그리지 않는다. 점검 공간의 점은 단색이고, 고른 연령대만 진하게 보여 줄 수 있다.
+// 주행 공간만 시연용 주행 군집 4개를 서로 구분되는 색으로 칠한다(PO 결정 2026-11-12). 색은 좋고 나쁨을 뜻하지 않는다.
 // 내 기록: 지금 값(최근 가운데 값)은 진한 노랑, 지난 점검·주는 같은 노랑으로 오래될수록 연하게. 선으로 잇지 않는다(추세처럼 보이지 않게).
 (function () {
   const BAND_LABEL = { all: '전체', '60-64': '60~64세', '65-69': '65~69세', '70-74': '70~74세', '75-79': '75~79세', '80+': '80세 이상' };
@@ -15,8 +16,21 @@
   function jitter(i) { const x = Math.sin(i * 12.9898) * 43758.5453; return (x - Math.floor(x) - 0.5) * 0.3; }
 
   /** @param history 지난 내 기록(오래된 것부터), 각 항목은 이 공간의 세 축 값을 모두 가진다. */
-  function view(container, space, drivers, me, history) {
+  /** 내 값과 가장 가까운 시연 군집(축마다 전체 표준편차로 나눈 거리). */
+  function nearestGroup(groups, me) {
+    if (!groups || !me) return null;
+    let best = null, bestD = Infinity;
+    groups.items.forEach(function (g) {
+      let d = 0;
+      Object.keys(groups.scale).forEach(function (k) { const z = (me[k] - g.center[k]) / groups.scale[k]; d += z * z; });
+      if (d < bestD) { bestD = d; best = g; }
+    });
+    return best;
+  }
+
+  function view(container, space, drivers, me, history, groups) {
     history = history || [];
+    if (space !== 'driving') groups = null;
     const spec = SPACES[space];
     const keys = spec.axes.map(function (a) { return a[0]; });
     const pts = drivers.filter(function (d) { return keys.every(function (k) { return d[k] !== null; }); });
@@ -30,7 +44,7 @@
     });
     function norm(k, v) { const r = ranges[keys.indexOf(k)]; return 2 * (v - r[0]) / Math.max(1e-9, r[1] - r[0]) - 1; }
     const cloud = pts.map(function (d, i) {
-      return { band: d.band, p: keys.map(function (k) { return norm(k, d[k] + (k === 'drive_days' ? jitter(i) : 0)); }) };
+      return { band: d.band, group: d.group, p: keys.map(function (k) { return norm(k, d[k] + (k === 'drive_days' ? jitter(i) : 0)); }) };
     });
     const mine = me && keys.every(function (k) { return me[k] !== undefined; }) ? keys.map(function (k) { return norm(k, me[k]); }) : null;
     const past = history.map(function (h, i) {
@@ -55,6 +69,39 @@
     const bar = document.createElement('div');
     bar.className = 'choices p3-bands';
     wrap.append(bar);
+    // 군집 범례: 누르면 그 군집만 진하게(다시 누르면 전체)
+    const colorOf = {};
+    let focus = null;
+    const myGroup = groups ? nearestGroup(groups, me) : null;
+    if (groups) {
+      groups.items.forEach(function (gr) { colorOf[gr.id] = gr.color; });
+      const lg = document.createElement('div');
+      lg.className = 'p3-groups';
+      lg.setAttribute('aria-label', '주행 군집 범례');
+      groups.items.forEach(function (gr) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'p3-group';
+        b.setAttribute('aria-pressed', 'false');
+        const sw = document.createElement('span');
+        sw.className = 'p3-swatch';
+        sw.style.background = gr.color;
+        b.append(sw, document.createTextNode(gr.title + (myGroup && myGroup.id === gr.id ? ' (나와 가까움)' : '')));
+        b.addEventListener('click', function () {
+          focus = focus === gr.id ? null : gr.id;
+          lg.querySelectorAll('.p3-group').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b && focus !== null)); });
+          draw();
+        });
+        lg.append(b);
+      });
+      const me0 = document.createElement('span');
+      me0.className = 'p3-group p3-group-me';
+      const msw = document.createElement('span');
+      msw.className = 'p3-swatch p3-swatch-me';
+      me0.append(msw, document.createTextNode('나의 최근 기록'));
+      lg.append(me0);
+      wrap.append(lg);
+    }
     container.append(wrap);
 
     let yaw = -0.7, pitch = 0.45, band = 'all';
@@ -107,7 +154,13 @@
       // 점: 뒤에서 앞으로
       const order = cloud.map(function (c) { return { c: c, q: project(c.p, w, h) }; }).sort(function (a, b) { return a.q[2] - b.q[2]; });
       order.forEach(function (o) {
-        const on = band === 'all' || o.c.band === band;
+        const on = (band === 'all' || o.c.band === band) && (!focus || o.c.group === focus);
+        if (groups && o.c.group) {
+          g.globalAlpha = on ? 0.7 : 0.07;
+          g.fillStyle = colorOf[o.c.group];
+          g.beginPath(); g.arc(o.q[0], o.q[1], on ? 2.6 : 2.2, 0, Math.PI * 2); g.fill();
+          return;
+        }
         g.globalAlpha = on ? 0.55 : 0.08;
         g.fillStyle = on && band !== 'all' ? ink : soft;
         g.beginPath(); g.arc(o.q[0], o.q[1], on && band !== 'all' ? 2.6 : 2.2, 0, Math.PI * 2); g.fill();
@@ -136,8 +189,10 @@
         const floor = project([mine[0], -1, mine[2]], w, h);
         g.strokeStyle = me; g.setLineDash([4, 3]); g.lineWidth = 2;
         g.beginPath(); g.moveTo(q[0], q[1]); g.lineTo(floor[0], floor[1]); g.stroke(); g.setLineDash([]);
-        g.fillStyle = me; g.strokeStyle = ink; g.lineWidth = 1.5;
-        g.beginPath(); g.arc(q[0], q[1], 5, 0, Math.PI * 2); g.fill(); g.stroke();
+        // 군집 색 위에서도 보이게: 흰 바탕 고리 + 진한 노랑 + 남색 테두리
+        g.fillStyle = css('--surface'); g.beginPath(); g.arc(q[0], q[1], 9, 0, Math.PI * 2); g.fill();
+        g.fillStyle = me; g.strokeStyle = ink; g.lineWidth = 2;
+        g.beginPath(); g.arc(q[0], q[1], 6.5, 0, Math.PI * 2); g.fill(); g.stroke();
         g.fillStyle = ink; g.font = 'bold 14px ' + css('--font');
         g.fillText('나', q[0] + 8, q[1] - 6);
       }
@@ -162,8 +217,8 @@
     });
     window.addEventListener('resize', draw);
     draw();
-    return { count: cloud.length, mine: !!mine, past: past.length };
+    return { count: cloud.length, mine: !!mine, past: past.length, myGroup: myGroup };
   }
 
-  window.NBPattern3D = { view: view };
+  window.NBPattern3D = { view: view, nearestGroup: nearestGroup };
 })();

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 브라우저가 다크 모드에서 화면 색을 강제로 뒤집지 않도록 밝음/어두움 둘 다 직접 지원한다고 밝힌다 -->
+<meta name="color-scheme" content="light dark">
+<title>늘봄 Drive 웹 시연 (읽기 전용)</title>
+<link rel="stylesheet" href="app.css">
+<link rel="stylesheet" href="demo-shim.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><img class="logo" src="img/logo.png" alt="" width="40" height="40">늘봄 Drive<span>NEULBOM</span></div>
+  <nav class="tabs" aria-label="주요 메뉴">
+    <button class="tab on" data-tab="overview" aria-current="page">한눈에 보기</button>
+    <button class="tab" data-tab="driving">나의 드라이빙</button>
+    <button class="tab" data-tab="checks">나의 주의·반응 기록</button>
+    <button class="tab" data-tab="journey">나의 여정</button>
+    <button class="tab" data-tab="pattern">패턴 지도 (시연)</button>
+    <button class="tab" data-tab="habits">운전 습관 정보</button>
+    <button class="tab" data-tab="share">가족 공유</button>
+    <button class="tab" data-tab="settings">설정·권한</button>
+  </nav>
+</header>
+
+<main>
+  <section id="overview" class="panel">
+    <!-- 브랜드 그림(차량 앱 대기 화면과 같은 그림, 장식). 문장은 그림과 별도 레이어. -->
+    <div class="hero" aria-hidden="true">
+      <picture>
+        <source srcset="img/hero-dark.jpg" media="(prefers-color-scheme: dark)">
+        <img src="img/hero-light.jpg" alt="" width="994" height="820">
+      </picture>
+      <div class="hero-text">
+        <p class="hero-mission">나이가 들어도,<br>운전의 즐거움은 계속되도록.</p>
+        <p class="hero-sub">내 운전 습관과 점검 기록을 스스로 살펴보는 곳이에요.</p>
+      </div>
+    </div>
+    <div class="period">
+      <h1>한눈에 보기</h1>
+      <div class="choices" id="overview-range" role="radiogroup" aria-label="보여 줄 기간"></div>
+    </div>
+    <p id="overview-state" class="state" aria-live="polite">기록을 불러오는 중이에요.</p>
+    <!-- 두 레인은 위아래로 따로 둔다. 서로 잇는 선·문구·합친 값은 없다(D23). -->
+    <article class="lane" aria-labelledby="lane-driving-title">
+      <div class="lane-head"><h2 id="lane-driving-title">주행 습관</h2><span id="lane-driving-mock" class="badge" hidden>모의 주행 기록</span></div>
+      <p id="lane-driving-text" class="text"></p>
+      <div class="lane-charts">
+        <figure class="chart"><figcaption>주마다 주행한 날</figcaption><div id="chart-driving-days"></div><p id="legend-driving-days" class="chart-sub"></p></figure>
+        <figure class="chart"><figcaption>급감속 기록 (100 km당, 주별)</figcaption><div id="chart-driving-decel"></div><p id="legend-driving-decel" class="chart-sub"></p></figure>
+      </div>
+      <ul id="lane-driving-notes" class="notices small"></ul>
+      <button class="ghost link to-tab" data-to="driving" type="button">나의 드라이빙 자세히 보기 →</button>
+    </article>
+    <article class="lane" aria-labelledby="lane-checks-title">
+      <div class="lane-head"><h2 id="lane-checks-title">주의·반응 점검</h2><span id="lane-checks-mock" class="badge" hidden>모의 차량에서 한 점검</span></div>
+      <p id="lane-checks-text" class="text"></p>
+      <div class="lane-charts">
+        <figure class="chart"><figcaption>주마다 한 점검</figcaption><div id="chart-checks-weeks"></div><p id="legend-checks-weeks" class="chart-sub"></p></figure>
+      </div>
+      <div id="lane-checks-tasks" class="lane-charts three"></div>
+      <ul id="lane-checks-notes" class="notices small"></ul>
+      <button class="ghost link to-tab" data-to="checks" type="button">나의 주의·반응 기록 자세히 보기 →</button>
+    </article>
+    <article class="box">
+      <h2>알아 두실 점</h2>
+      <ul id="overview-notices" class="notices"></ul>
+    </article>
+  </section>
+
+  <section id="driving" class="panel" hidden>
+    <div class="period">
+      <button id="prev" class="ghost" aria-label="이전 달">‹</button>
+      <h1 id="period-title">이번 달</h1>
+      <button id="next" class="ghost" aria-label="다음 달">›</button>
+      <span id="mock" class="badge" hidden>모의 주행 기록</span>
+      <button class="link-btn to-share" type="button">가족에게 공유하기</button>
+    </div>
+    <p id="state" class="state" aria-live="polite">기록을 불러오는 중이에요.</p>
+    <div id="cards" class="cards"></div>
+    <article id="suggest" class="box suggest-box" aria-labelledby="suggest-title" hidden>
+      <div class="suggest-head">
+        <h2 id="suggest-title">이번 달의 기록과 작은 제안</h2>
+        <span id="suggest-badge" class="badge">합성 데이터 기반 기능 시연</span>
+      </div>
+      <div id="suggest-scenarios" class="choices suggest-scenarios" aria-label="시연 시나리오"></div>
+      <p id="suggest-state" class="state"></p>
+      <div id="suggest-main"></div>
+    </article>
+    <article class="box change-box" aria-labelledby="change-title">
+      <h2 id="change-title">지난달과 달라진 점</h2>
+      <p id="change-state" class="state"></p>
+      <ul id="change-list" class="change-list"></ul>
+      <p class="small">변화량은 두 달 기록을 그대로 계산한 값이에요. 함께 보여 드리는 운전 습관 정보는 누구에게나 해당하는 일반 정보이고, 내 운전을 평가하거나 원인을 판단한 것이 아니에요.</p>
+    </article>
+    <div class="lower">
+      <article class="box">
+        <h2>알아 두실 점</h2>
+        <ul id="notices" class="notices"></ul>
+      </article>
+      <article class="box">
+        <h2>이번 달 기록 상태</h2>
+        <ul id="driving-quality" class="signals"></ul>
+        <p class="small">신호가 일부 끊긴 주행은 참고용으로만 넣고, 너무 짧거나 신호가 크게 빠진 주행은 계산에서 빼요. 기록 상태는 운전 습관을 평가한 값이 아니에요.</p>
+      </article>
+      <article class="box">
+        <h2>이 차량에서 받는 정보</h2>
+        <ul id="signals" class="signals"></ul>
+        <p class="small">위치, 주행 경로, 목적지는 받지 않아요.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="checks" class="panel" hidden>
+    <div class="period">
+      <h1>나의 주의·반응 기록</h1>
+      <span id="checks-mock" class="badge" hidden>모의 차량에서 한 점검</span>
+      <button class="link-btn to-share" type="button">가족에게 공유하기</button>
+    </div>
+    <p id="checks-state" class="state" aria-live="polite">기록을 불러오는 중이에요.</p>
+    <div id="checks-cards" class="cards"></div>
+    <article class="lane records" aria-labelledby="checks-records-title">
+      <div class="lane-head"><h2 id="checks-records-title">점검별 기록</h2></div>
+      <p class="text">점검할 때마다 남은 기록을 활동별로 따로 보여 드려요. 점검 방식이나 기기가 바뀐 곳은 나눠서 보여 드려요.</p>
+      <div id="checks-records" class="lane-charts three"></div>
+    </article>
+    <div class="lower">
+      <article class="box">
+        <h2>알아 두실 점</h2>
+        <ul id="checks-notices" class="notices"></ul>
+      </article>
+      <article class="box">
+        <h2>최근 점검</h2>
+        <ul id="checks-history" class="signals"></ul>
+        <p class="small">점검은 차에서, 안전하게 주차했을 때만 할 수 있어요.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="journey" class="panel" hidden>
+    <div class="period">
+      <h1>나의 여정</h1>
+      <div class="choices" id="journey-range" role="radiogroup" aria-label="보여 줄 기간"></div>
+    </div>
+    <p class="state">나이가 들어도, 운전의 즐거움은 계속되도록. 달마다 운전하고 점검한 기록이에요.</p>
+    <p id="journey-state" class="state" aria-live="polite"></p>
+    <div id="journey-months" class="months"></div>
+    <article class="box journey-notes">
+      <h2>알아 두실 점</h2>
+      <ul id="journey-notices" class="notices"></ul>
+    </article>
+  </section>
+
+  <section id="settings" class="panel" hidden>
+    <h1 class="page-title">설정·권한</h1>
+    <div class="lower">
+      <article class="box">
+        <h2>무엇을 허락할지</h2>
+        <div id="consents" class="rows"></div>
+        <p class="small">바꾼 내용은 차가 다음에 주차할 때 차량에도 반영돼요.</p>
+      </article>
+      <article class="box">
+        <h2>점검 제안 쉬기</h2>
+        <p class="small">쉬는 동안에는 차에서 점검을 먼저 제안하지 않아요. 원하실 때 직접 시작할 수는 있어요.</p>
+        <div id="pause" class="choices" role="radiogroup" aria-label="점검 제안 쉬기"></div>
+        <p id="pause-state" class="small" aria-live="polite"></p>
+      </article>
+      <article class="box">
+        <h2>내 기록</h2>
+        <p id="retention" class="small"></p>
+        <div class="actions">
+          <a class="btn secondary" href="/v1/me/export" download>내 기록 내려받기</a>
+          <button id="delete-all" class="btn secondary" type="button">모든 기록 지우기</button>
+        </div>
+        <p id="data-state" class="small" aria-live="polite"></p>
+      </article>
+    </div>
+  </section>
+
+  <section id="share" class="panel" hidden>
+    <h1 class="page-title">가족 공유</h1>
+    <div class="lower">
+      <article class="box">
+        <h2>공유 링크 만들기</h2>
+        <p class="small">고른 기록만 볼 수 있는 링크를 만들어요. 받은 사람은 보기만 할 수 있고, 언제든 취소할 수 있어요.</p>
+        <fieldset class="rows plain">
+          <legend>무엇을 보여 줄까요?</legend>
+          <label class="row"><input type="checkbox" name="scope" value="DRIVING_SUMMARY"> 이번 달 나의 드라이빙</label>
+          <label class="row"><input type="checkbox" name="scope" value="CHECK_RECORDS"> 나의 주의·반응 기록</label>
+        </fieldset>
+        <fieldset class="rows plain">
+          <legend>얼마 동안 열어 둘까요?</legend>
+          <div class="choices" id="share-days"></div>
+        </fieldset>
+        <button id="share-create" class="btn" type="button">공유 링크 만들기</button>
+        <div id="share-result" class="result" hidden>
+          <p>아래 링크를 문자나 메신저로 직접 보내 주세요.</p>
+          <div class="copy"><input id="share-url" readonly aria-label="공유 링크"><button id="share-copy" class="btn secondary" type="button">복사</button></div>
+        </div>
+        <p id="share-state" class="small" aria-live="polite"></p>
+      </article>
+      <article class="box">
+        <h2>만든 링크</h2>
+        <ul id="share-list" class="signals"></ul>
+      </article>
+    </div>
+  </section>
+  <section id="habits" class="panel" hidden>
+    <div class="period">
+      <h1>건강한 운전 습관 정보</h1>
+      <span id="habits-draft" class="badge" hidden>검수 전 임시 내용</span>
+    </div>
+    <p id="habits-note" class="state"></p>
+    <div id="habits-sections" class="cards"></div>
+  </section>
+  <section id="pattern" class="panel" hidden>
+    <div class="period">
+      <h1>패턴 지도</h1>
+      <span class="badge">시연용 합성 데이터</span>
+    </div>
+    <p id="pattern-notice" class="pm-banner" role="note">시연용 합성 데이터예요. 실제 운전자 분포가 아니에요.</p>
+    <p id="pattern-state" class="state" aria-live="polite"></p>
+    <article class="lane" aria-labelledby="pm-checks-title">
+      <div class="lane-head"><h2 id="pm-checks-title">주의·반응 점검</h2></div>
+      <div id="pattern-checks" class="pm-grid"></div>
+      <figure class="chart p3-figure">
+        <figcaption>3차원으로 보기 — 세 활동의 반응 시간을 한 공간에 (끌어서 돌려 보세요)</figcaption>
+        <div id="pattern-checks-3d"></div>
+        <p id="pattern-checks-3d-note" class="chart-sub"></p>
+      </figure>
+    </article>
+    <article class="lane" aria-labelledby="pm-driving-title">
+      <div class="lane-head"><h2 id="pm-driving-title">주행 습관</h2></div>
+      <div id="pattern-driving" class="pm-grid"></div>
+      <figure class="chart p3-figure">
+        <figcaption>3차원으로 보기 — 주행한 날·거리·야간 비율을 한 공간에 (끌어서 돌려 보세요)</figcaption>
+        <div id="pattern-driving-3d"></div>
+        <p id="pattern-driving-3d-note" class="chart-sub"></p>
+      </figure>
+      <h3 class="pm-sub">시연용 주행 군집</h3>
+      <div id="pattern-groups" class="pm-groups"></div>
+      <p id="pattern-groups-note" class="chart-sub"></p>
+    </article>
+    <article class="box">
+      <h2>지금 되는 것과 다음 계획</h2>
+      <dl class="plan">
+        <dt>지금 (시연)</dt>
+        <dd>합성 운전자 분포 위에 내 위치 표시, 시연용 주행 군집과 설명, 지난달과 달라진 주행 기록과 일반 운전 습관 정보</dd>
+        <dt>다음 계획</dt>
+        <dd>실제 사용자 기록이 충분히 모인 뒤 동의 범위 안에서 분포를 다시 만들기, 군집을 쓸지는 그 기록으로 다시 확인</dd>
+      </dl>
+    </article>
+    <article class="box">
+      <h2>이 지도에 대해</h2>
+      <ul id="pattern-about" class="notices"></ul>
+    </article>
+  </section>
+</main>
+
+<footer class="foot">내 운전 습관과 기록을 스스로 살펴보는 서비스예요. 건강이나 운전에 대한 판단은 하지 않아요.</footer>
+<script src="demo-data.js"></script>
+<script src="demo-shim.js"></script>
+<script src="render.js"></script>
+<script src="pattern3d.js"></script>
+<script src="pattern.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

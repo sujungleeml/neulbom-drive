@@ -28,7 +28,7 @@ fun CompletionScreen(saveState: SaveState, onClose: () -> Unit) {
     val p = LocalNeulbomPalette.current
     val l = pageLayout("completion")
     CenterPage(layout = l) {
-        // 완료 일러스트. 장식이라 접근성 설명은 두지 않는다.
+        // 완료 일러스트(docs/design/assets/v3). 장식이라 접근성 설명은 두지 않는다.
         Image(
             painter = layoutPainter(l.image, if (p.isNight) R.drawable.completion_dark else R.drawable.completion_light),
             contentDescription = null,

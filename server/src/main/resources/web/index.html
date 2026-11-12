@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- 브라우저가 다크 모드에서 화면 색을 강제로 뒤집지 않도록 밝음/어두움 둘 다 직접 지원한다고 밝힌다 -->
+<meta name="color-scheme" content="light dark">
 <title>늘봄 Drive 나의 드라이빙</title>
 <link rel="stylesheet" href="app.css">
 </head>
@@ -76,6 +78,21 @@
     </div>
     <p id="state" class="state" aria-live="polite">기록을 불러오는 중이에요.</p>
     <div id="cards" class="cards"></div>
+    <article id="suggest" class="box suggest-box" aria-labelledby="suggest-title" hidden>
+      <div class="suggest-head">
+        <h2 id="suggest-title">이번 달의 기록과 작은 제안</h2>
+        <span id="suggest-badge" class="badge">합성 데이터 기반 기능 시연</span>
+      </div>
+      <div id="suggest-scenarios" class="choices suggest-scenarios" aria-label="시연 시나리오"></div>
+      <p id="suggest-state" class="state"></p>
+      <div id="suggest-main"></div>
+    </article>
+    <article class="box change-box" aria-labelledby="change-title">
+      <h2 id="change-title">지난달과 달라진 점</h2>
+      <p id="change-state" class="state"></p>
+      <ul id="change-list" class="change-list"></ul>
+      <p class="small">변화량은 두 달 기록을 그대로 계산한 값이에요. 함께 보여 드리는 운전 습관 정보는 누구에게나 해당하는 일반 정보이고, 내 운전을 평가하거나 원인을 판단한 것이 아니에요.</p>
+    </article>
     <div class="lower">
       <article class="box">
         <h2>알아 두실 점</h2>
@@ -220,6 +237,18 @@
         <div id="pattern-driving-3d"></div>
         <p id="pattern-driving-3d-note" class="chart-sub"></p>
       </figure>
+      <h3 class="pm-sub">시연용 주행 군집</h3>
+      <div id="pattern-groups" class="pm-groups"></div>
+      <p id="pattern-groups-note" class="chart-sub"></p>
+    </article>
+    <article class="box">
+      <h2>지금 되는 것과 다음 계획</h2>
+      <dl class="plan">
+        <dt>지금 (시연)</dt>
+        <dd>합성 운전자 분포 위에 내 위치 표시, 시연용 주행 군집과 설명, 지난달과 달라진 주행 기록과 일반 운전 습관 정보</dd>
+        <dt>다음 계획</dt>
+        <dd>실제 사용자 기록이 충분히 모인 뒤 동의 범위 안에서 분포를 다시 만들기, 군집을 쓸지는 그 기록으로 다시 확인</dd>
+      </dl>
     </article>
     <article class="box">
       <h2>이 지도에 대해</h2>

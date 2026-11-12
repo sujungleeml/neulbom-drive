@@ -3,6 +3,8 @@ package com.neulbom.drive.domain.cognitive
 import com.neulbom.drive.core.model.SafetyState
 import com.neulbom.drive.vehicle.api.CapabilityFlag
 import com.neulbom.drive.vehicle.api.VehicleState
+import java.time.Duration
+import java.time.Instant
 
 enum class DenialReason(val message: String) {
     DRIVING("운전 중에는 점검을 진행할 수 없어요."),
@@ -26,6 +28,7 @@ sealed interface GateDecision {
  *  - 진입 조건: PARKED_SAFE + 사용자 명시적 시작 + 앱 전경 + 인지 점검 동의 + 주차 확인 capability.
  *  - 속도 0만으로는 절대 허용하지 않는다(VehicleState.safety가 검증된 주차만 PARKED_SAFE로 판정).
  *  - 지속 조건: 위 조건 중 하나라도 깨지면 즉시 중지 사유를 반환.
+ *  - 신호 나이: [now]와 [maxSignalAge]가 주어지면, 상태가 그보다 오래 갱신되지 않았을 때 상태 불명으로 본다(Fail-closed).
  */
 class ParkingSafetyGate {
 
@@ -35,8 +38,10 @@ class ParkingSafetyGate {
         userInitiated: Boolean,
         appInForeground: Boolean,
         cognitiveConsent: Boolean,
+        now: Instant? = null,
+        maxSignalAge: Duration? = null,
     ): GateDecision {
-        environmentDenial(state, capabilities, appInForeground)?.let { return GateDecision.Denied(it) }
+        environmentDenial(state, capabilities, appInForeground, now, maxSignalAge)?.let { return GateDecision.Denied(it) }
         if (!cognitiveConsent) return GateDecision.Denied(DenialReason.CONSENT_MISSING)
         if (!userInitiated) return GateDecision.Denied(DenialReason.NOT_USER_INITIATED)
         return GateDecision.Allowed
@@ -47,18 +52,32 @@ class ParkingSafetyGate {
         state: VehicleState,
         capabilities: Set<CapabilityFlag>,
         appInForeground: Boolean,
-    ): DenialReason? = environmentDenial(state, capabilities, appInForeground)
+        now: Instant? = null,
+        maxSignalAge: Duration? = null,
+    ): DenialReason? = environmentDenial(state, capabilities, appInForeground, now, maxSignalAge)
 
     /** 주차 후 권유 카드(S04)를 보여도 되는 환경인지. 사용자 시작 여부와 무관. */
-    fun canShowParkedPrompt(state: VehicleState, capabilities: Set<CapabilityFlag>, appInForeground: Boolean): Boolean =
-        environmentDenial(state, capabilities, appInForeground) == null
+    fun canShowParkedPrompt(
+        state: VehicleState,
+        capabilities: Set<CapabilityFlag>,
+        appInForeground: Boolean,
+        now: Instant? = null,
+        maxSignalAge: Duration? = null,
+    ): Boolean = environmentDenial(state, capabilities, appInForeground, now, maxSignalAge) == null
+
+    /** 신호가 허용 나이보다 오래 갱신되지 않았는지. */
+    fun isStale(state: VehicleState, now: Instant?, maxSignalAge: Duration?): Boolean =
+        now != null && maxSignalAge != null && Duration.between(state.observedAt, now) > maxSignalAge
 
     private fun environmentDenial(
         state: VehicleState,
         capabilities: Set<CapabilityFlag>,
         appInForeground: Boolean,
+        now: Instant?,
+        maxSignalAge: Duration?,
     ): DenialReason? = when {
         CapabilityFlag.PARKING_STATE !in capabilities -> DenialReason.CAPABILITY_MISSING
+        isStale(state, now, maxSignalAge) -> DenialReason.STATE_UNKNOWN
         state.safety == SafetyState.DRIVING -> DenialReason.DRIVING
         state.safety == SafetyState.POWERING_OFF -> DenialReason.POWERING_OFF
         state.safety != SafetyState.PARKED_SAFE -> DenialReason.STATE_UNKNOWN

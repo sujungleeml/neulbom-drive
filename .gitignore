@@ -8,3 +8,17 @@ captures/
 .kotlin/
 *.apk
 !dist/*.apk
+!apk/*.apk
+
+# 서명 키와 비밀번호(저장소 밖 ~/.neulbom-keys/ 에 둔다)
+*.jks
+*.keystore
+*.p12
+keystore.properties
+release-signing.properties
+.env
+.env.*
+
+# 로컬 도구 설정, 개인 문서
+docs/submission/received/
+*.log

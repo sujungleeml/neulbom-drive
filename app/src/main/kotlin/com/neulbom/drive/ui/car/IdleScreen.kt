@@ -84,6 +84,8 @@ fun IdleScreen(container: AppContainer) {
         userInitiated = true,
         appInForeground = foreground,
         cognitiveConsent = consents.isGranted(ConsentType.COGNITIVE_CHECK),
+        now = container.clock.now(),
+        maxSignalAge = container.vehicle.adapter.maxSignalAge,
     )
     val parked = vehicleState.safety == SafetyState.PARKED_SAFE
     val supported = container.vehicle.adapter.signalSupport().count { it.status == SupportStatus.SUPPORTED }
@@ -154,7 +156,7 @@ fun IdleContent(
 }
 
 /**
- * 브랜드 패널: 브랜드 그래픽(660×1050 기준) 위에 미션 문장을 **별도 레이어**로 얹는다.
+ * 브랜드 패널: GPT 제작 그래픽(docs/design/assets/v3, 660×1050 기준) 위에 미션 문장을 **별도 레이어**로 얹는다.
  * 그림은 비율을 지킨 채 영역 안에서 잘리고(기준점·확대는 배치 값), 문장은 그림이 어떻게 잘리든 늘 보인다. 장식이라 접근성 설명은 두지 않는다.
  */
 @Composable
@@ -279,7 +281,7 @@ private fun IdleBody(
                 if (driving.on) {
                     Caption(drivingText)
                 } else {
-                    // 꺼져 있으면 '켜러 가기' → 별도 창에서 동의(대기 화면에는 펼치지 않는다). 동의 전에는 수집하지 않고, 점검은 그대로 할 수 있다.
+                    // 꺼져 있으면 '켜러 가기' → 별도 창에서 동의(대기 화면에는 펼치지 않는다, GPT 11/05). 동의 전에는 수집하지 않고, 점검은 그대로 할 수 있다.
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp), modifier = Modifier.fillMaxWidth()) {
                         Caption(UiText.IDLE_DRIVING_OFF, modifier = Modifier.weight(1f))
                         SecondaryButton(UiText.IDLE_DRIVING_TURN_ON, onClick = { showDrivingConsent = true })

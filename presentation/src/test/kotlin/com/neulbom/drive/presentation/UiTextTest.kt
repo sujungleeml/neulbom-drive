@@ -9,7 +9,7 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 /**
- * 원칙: 건강 상태 진단 문구를 생성하지 않는다.
+ * 마스터 지시문 7: 건강 상태 진단 문구를 생성하지 않는다.
  * 앱이 보여주는 모든 문구에서 진단·위험도·운전 적합성·면허 관련 표현을 금지한다.
  */
 class UiTextTest {

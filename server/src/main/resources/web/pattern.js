@@ -154,12 +154,35 @@
        ['driving', '주행 기록이 4주 이상 모이면 "나"를 함께 보여 드려요.']].forEach(function (a) {
         const box = $('pattern-' + a[0] + '-3d');
         box.replaceChildren();
-        const r = window.NBPattern3D.view(box, a[0], points.drivers, me, history[a[0]]);
-        $('pattern-' + a[0] + '-3d-note').textContent = '점 하나 = 합성 운전자 한 명(' + r.count.toLocaleString() + '명). 점이 모인 모양은 생성기 가정에서 나온 것이고, 나눠진 무리나 경계가 있다는 뜻이 아니에요.' +
+        const r = window.NBPattern3D.view(box, a[0], points.drivers, me, history[a[0]], points.groups);
+        if (a[0] === 'driving') groupCards(points.groups, r.myGroup);
+        $('pattern-' + a[0] + '-3d-note').textContent = '점 하나 = 합성 운전자 한 명(' + r.count.toLocaleString() + '명). ' +
+          (a[0] === 'driving' ? '색은 시연용 주행 군집이에요. 범례를 누르면 그 군집만 진하게 보여요.' : '점이 모인 모양은 생성기 가정에서 나온 것이고, 나눠진 무리나 경계가 있다는 뜻이 아니에요.') +
           (a[0] === 'driving' ? ' 주행한 날은 겹치지 않게 살짝 흩뜨려 그렸어요.' : '') + (r.mine ? '' : ' ' + a[1]) +
           (r.past ? ' 진한 노랑은 지금의 나(최근 가운데 값), 연한 노랑 ' + r.past + '개는 지난 시점의 나예요(오래될수록 연하게). 합성 점과 같은 눈금이 되도록 그 시점까지 최근 4' + (a[0] === 'checks' ? '번' : '주') + '의 가운데 값으로 찍었어요.' : '');
       });
     } catch (e) { /* 3D 보기는 보조 화면이라 실패해도 나머지는 그대로 둔다 */ }
+  }
+
+  /** 시연용 주행 군집 설명 카드. 숫자는 합성 데이터에서 실제로 뽑힌 가운데 값이다. */
+  function groupCards(groups, mine) {
+    const box = $('pattern-groups');
+    if (!box || !groups) return;
+    box.replaceChildren();
+    groups.items.forEach(function (g) {
+      const card = NB.el('article', 'pm-group' + (mine && mine.id === g.id ? ' mine' : ''));
+      card.style.setProperty('--group', g.color);
+      const head = NB.el('div', 'pm-group-head');
+      head.append(NB.el('span', 'p3-swatch'), NB.el('h3', null, g.title));
+      head.firstChild.style.background = g.color;
+      card.append(head, NB.el('p', null, g.desc));
+      const c = g.center;
+      card.append(NB.el('p', 'pm-group-nums', '가운데 값: 주 ' + c.drive_days.toFixed(1) + '일, 주 ' + Math.round(c.km_week) + 'km, 야간 ' + Math.round(c.night_share) + '%'));
+      card.append(NB.el('p', 'chart-sub', '합성 운전자 ' + g.n + '명'));
+      if (mine && mine.id === g.id) card.append(NB.el('p', 'pm-group-me', '내 최근 4주 기록과 가장 가까운 군집이에요.'));
+      box.append(card);
+    });
+    $('pattern-groups-note').textContent = groups.notice + ' 어느 군집에 가깝다는 것만으로 나를 판단하지 않아요.';
   }
 
   let cache = null;
@@ -190,7 +213,8 @@
         '진한 띠는 합성 운전자 가운데 50%, 옅은 띠는 80%, 가는 선은 90%가 있는 범위예요. 세로 막대는 가운데 값이에요.',
         '띠의 어느 쪽이 좋다거나 나쁘다는 뜻은 없어요. 건강이나 운전 능력에 대한 판단이 아니에요.',
         '점검 값은 같은 방식(과제 버전·자극 세트)의 점검이 ' + MIN_CHECKS + '번 이상일 때만 함께 보여 드려요. 합성 분포도 첫 점검 1번을 빼고 같은 규칙으로 계산했어요.',
-        '주행과 점검은 따로 보여 드려요. 두 값을 합치거나 서로 연결해 해석하지 않아요.',
+        '주행과 점검은 따로 보여 드려요. 두 값을 합친 값을 만들지 않아요.',
+        '주행 군집 4개는 시연을 위해 정한 가정으로 만든 묶음이에요. 실제 운전자에게서 찾은 묶음이 아니에요. 점검 공간에는 군집을 만들지 않았어요.',
       ]);
       state.textContent = '내 기록이 합성 운전자 분포의 어디쯤인지 위치만 보여 드려요. 연령대 줄은 모두 같은 "나" 선을 지나요.';
     } catch (e) {

@@ -58,7 +58,7 @@ fun drivingReport(store: DrivingStore, period: YearMonth): DrivingReportDto {
         origin = report.origin.name,
         algorithmVersion = report.algorithmVersion,
         lines = report.lines.map {
-            MetricLineDto(it.key, it.value, it.unit, it.direction?.name, it.extra, DrivingCopy.render(it.templateId, it))
+            MetricLineDto(it.key, it.value, it.unit, it.direction?.name, it.extra, DrivingCopy.render(it.templateId, it), it.previous, DrivingCopy.change(it))
         },
         notices = report.notices.map { DrivingCopy.render(it) },
     )

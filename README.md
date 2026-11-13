@@ -7,6 +7,12 @@
 > **이 저장소는 현대자동차그룹 차량용 앱 개발 공모전 시연본입니다(버전 `1.0.0-contest`).**
 > 실제 차량 SDK와는 아직 연결하지 않았고, 차량 신호는 **모의(mock) 구현**, 웹의 주행 기록과 일부 기능은 **모의 기록·합성 데이터**로 동작합니다. 정식 출시본이 아닙니다.
 
+**바로 보기**
+
+- 시연 영상(2분 37초): https://youtu.be/uYZdidaSaO4
+- 읽기 전용 웹 시연(합성 데이터, 로그인·설치 불필요): https://sujungleeml.github.io/neulbom-drive/
+- 시연 APK 내려받기: [Release `v1.0.0-contest`](https://github.com/sujungleeml/neulbom-drive/releases/tag/v1.0.0-contest)
+
 - 차 안에서는 결과를 보여 주지 않습니다. 완료 화면에는 저장 상태와 닫기만 있습니다.
 - 주행 습관 기록과 점검 기록은 하나의 값으로 합치지 않습니다(`NoCombinedScoreTest`).
 - 위치, 경로, 목적지는 받지 않습니다. 마이크 권한도 없습니다.
@@ -103,7 +109,7 @@
 
 ### 웹 대시보드를 서버 없이 보기 (읽기 전용 웹 시연)
 
-[`docs/web-demo/index.html`](docs/web-demo/index.html)을 브라우저로 바로 열면 됩니다(설치·서버 불필요).
+https://sujungleeml.github.io/neulbom-drive/ 에서 바로 볼 수 있습니다(설치·서버·로그인 불필요). 저장소를 내려받았다면 [`docs/web-demo/index.html`](docs/web-demo/index.html)을 브라우저로 열어도 됩니다.
 
 - 웹 화면 코드는 그대로 쓰고, 시연 서버에서 미리 받아 둔 **모의 기록·합성 데이터**를 보여 줍니다. 화면 맨 위에 「읽기 전용 시연」 표시가 붙습니다.
 - 설정 바꾸기, 내려받기, 지우기, 공유 링크 만들기는 막혀 있고 안내만 나옵니다.
@@ -139,8 +145,9 @@ NEULBOM_DEMO_SEED=true ./gradlew -Pneulbom.jvmOnly=true :server:run
 
 ## 8. 시연 자료
 
-- 시연 영상(2분 37초): 제출 시 링크를 적습니다(영상 파일은 저장소에 넣지 않음)
-- 읽기 전용 웹 시연: [`docs/web-demo/index.html`](docs/web-demo/index.html)
+- 시연 영상(2분 37초): https://youtu.be/uYZdidaSaO4 (YouTube 일부 공개, 영상 파일은 저장소에 넣지 않음)
+- 읽기 전용 웹 시연: https://sujungleeml.github.io/neulbom-drive/ (원본 파일 [`docs/web-demo/`](docs/web-demo/))
+- 시연 APK: [Release `v1.0.0-contest`](https://github.com/sujungleeml/neulbom-drive/releases/tag/v1.0.0-contest)
 - 주요 화면: [`docs/screens/`](docs/screens/)
   - `car-screens.png` 차량 앱 화면 9종, `car-while-driving.png` 주행 중 화면
   - `web-checks.png` 나의 주의·반응 기록, `web-settings.jpg` 설정·권한

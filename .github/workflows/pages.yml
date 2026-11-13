@@ -1,0 +1,32 @@
+name: Web demo (GitHub Pages)
+
+# 읽기 전용 웹 시연(docs/web-demo, 정적 파일·합성 데이터)만 Pages에 올린다. 서버·백엔드는 배포하지 않는다.
+on:
+  push:
+    branches: [main]
+    paths: ["docs/web-demo/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/web-demo
+      - id: deployment
+        uses: actions/deploy-pages@v4
